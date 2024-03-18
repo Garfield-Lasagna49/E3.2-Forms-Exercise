@@ -1,19 +1,17 @@
 {{> Header }}
 
-<h1>Create New Pokemon</h1>
+<h2>Create a New Pokemon</h2>
 
 <form method="POST" action="/pokemon">
-	<div>
-		<label for="name">Name:</label>
-		<input type="text" id="name" name="name" />
-	</div>
-
-	<div>
-		<label for="type">Type:</label>
-		<input type="text" id="type" name="type" />
-	</div>
-
-	<button>Create</button>
+  <div>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" />
+  </div>
+  <div>
+    <label for="type">Type:</label>
+    <input type="text" id="type" name="type" />
+  </div>
+  <button>Create</button>
 </form>
 
 {{> Footer }}

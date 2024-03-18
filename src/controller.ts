@@ -8,7 +8,61 @@ export const getHome = async (req: IncomingMessage, res: ServerResponse) => {
     res.end(await renderTemplate("src/views/HomeView.hbs"));
 };
 
-// TODO: Copy-paste the getOnePokemon and getAllPokemon functions from the previous exercise.
+export const getAllPokemon = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+) => {
+    const url = new URL(req.url!, `http://${req.headers.host}`); // Use URL parsing
+    const queryParams = url.searchParams;
+    const typeFilter = queryParams.get("type");
+    const sortBy = queryParams.get("sortBy");
+    let pokemon: Pokemon[] = [];
+
+    // Apply basic filtering if we have a `typeFilter`:
+    if (typeFilter) {
+        pokemon = database.filter((pokemon) => pokemon.type === typeFilter);
+    } else {
+        pokemon = database;
+    }
+
+    if (sortBy === "name") {
+        pokemon = [...pokemon].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+        JSON.stringify({ message: "All Pokemon", payload: pokemon }, null, 2),
+    );
+};
+
+export const getOnePokemon = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+) => {
+    const id = Number(req.url?.split("/")[2]);
+    const foundPokemon = database.find((pokemon) => pokemon.id === id);
+
+    if (!foundPokemon) {
+        res.statusCode = 404;
+        return res.end(
+            JSON.stringify({ message: "Pokemon not found" }, null, 2),
+        );
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.end(
+        JSON.stringify(
+            {
+                message: "Pokemon found",
+                payload: foundPokemon,
+            },
+            null,
+            2,
+        ),
+    );
+};
 
 export const createPokemon = async (
     req: IncomingMessage,
@@ -17,6 +71,10 @@ export const createPokemon = async (
     const body = await parseBody(req);
 
     res.end(body);
+};
+
+export const getNewForm = async () => {
+    
 };
 
 const parseBody = async (req: IncomingMessage) => {
