@@ -29,12 +29,29 @@ export const getAllPokemon = async (
         pokemon = [...pokemon].sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    res.statusCode = 200;
+    const contentType = req.headers["content-type"];
+    const userAgent = req.headers["user-agent"];
+
+    "application/x-www-form-urlencoded"
+
+    if (userAgent?.includes("curl"))
+    {
+        res.statusCode = 201;
+        res.setHeader("Content-Type", "application/json");
+        res.end({pokemon: pokemon});
+    }
+    else {
+        res.statusCode = 201;
+        res.setHeader("Content-Type", "text/html");
+        res.end(await renderTemplate("src/views/ListView.hbs", {pokemon: database}));
+    }
+    
+    /*
     res.setHeader("Content-Type", "application/json");
     res.end(
-        JSON.stringify({ message: "All Pokemon", payload: pokemon }, null, 2),
-    );
-};
+    JSON.stringify({ message: "All Pokemon", payload: pokemon }, null, 2),
+    */
+    }
 
 export const getOnePokemon = async (
     req: IncomingMessage,
@@ -68,13 +85,67 @@ export const createPokemon = async (
     req: IncomingMessage,
     res: ServerResponse,
 ) => {
+    const contentType = req.headers["content-type"];
+    const userAgent = req.headers["user-agent"];
+
     const body = await parseBody(req);
 
-    res.end(body);
+    let newPokemon
+
+    // if content type...
+    if (contentType?.includes("json"))
+    {
+        newPokemon = JSON.parse(body)
+    }
+    else if (contentType?.includes("url")){
+        newPokemon = Object.fromEntries(new URLSearchParams(body).entries());
+    }
+
+    if (userAgent?.startsWith("curl"))
+    {
+        // if pokemon valid.
+        database.push({
+        id: database.length + 1,
+        name: newPokemon.name,
+        type: newPokemon.type
+      });
+
+        res.statusCode = 201;
+        res.statusMessage
+        res.end(
+            JSON.stringify(
+                {
+                    message: "Pokemon created",
+                    payload: {id: database.length,
+                        name: newPokemon.name,
+                        type: newPokemon.type},
+                },
+                null,
+                2,))
+    }
+    else
+    {
+        // If type and id valid.
+
+        database.push({
+            id: database.length + 1,
+            name: newPokemon.name,
+            type: newPokemon.type
+          });
+    
+        res.statusCode = 303;
+        res.setHeader("Location", "/pokemon");
+        res.end();
+    }
 };
 
-export const getNewForm = async () => {
-    
+export const getNewForm = async (
+    req: IncomingMessage,
+    res: ServerResponse,) => {
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.end(await renderTemplate("src/views/NewFormView.hbs"));
 };
 
 const parseBody = async (req: IncomingMessage) => {
